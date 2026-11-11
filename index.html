@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>红绿灯识别 · 浏览器端</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='7' y='2' width='10' height='20' rx='4' fill='%23131a22'/%3E%3Ccircle cx='12' cy='7' r='2' fill='%23ff3b30'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%23ffcc00'/%3E%3Ccircle cx='12' cy='17' r='2' fill='%2334c759'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="aurora"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <span></span><span></span><span></span>
+      </div>
+      <div>
+        <h1>红绿灯识别</h1>
+        <p>YOLOv8 · ONNX Runtime Web · 浏览器本地推理</p>
+      </div>
+    </div>
+    <div class="badge" id="modelBadge">模型加载中…</div>
+  </header>
+
+  <main class="layout">
+    <section class="panel stage-panel">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-mode="image">图片检测</button>
+        <button class="tab" data-mode="camera">摄像头实时</button>
+      </div>
+
+      <div class="stage" id="stage">
+        <canvas id="canvas"></canvas>
+        <video id="video" playsinline muted></video>
+
+        <div class="placeholder" id="placeholder">
+          <div class="placeholder-icon">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="7" y="2.5" width="10" height="19" rx="4.2"/>
+              <circle cx="12" cy="7" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="17" r="1.9"/>
+            </svg>
+          </div>
+          <p id="placeholderText">点击或拖拽图片到这里</p>
+          <span>支持 JPG / PNG / WebP</span>
+        </div>
+
+        <div class="hud" id="hud">
+          <span id="fps">-- FPS</span>
+          <span class="dot"></span>
+          <span id="hudMode">图片模式</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label class="slider">
+          <span>置信度</span>
+          <input id="conf" type="range" min="0.15" max="0.9" step="0.05" value="0.35" />
+          <b id="confVal">0.35</b>
+        </label>
+        <div class="actions">
+          <button class="btn ghost" id="pickBtn" disabled>选择图片</button>
+          <button class="btn primary" id="camBtn" disabled>开启摄像头</button>
+        </div>
+        <input id="fileInput" type="file" accept="image/*" hidden />
+      </div>
+      <p class="privacy">图片只在本机浏览器处理，不会上传到服务器。</p>
+    </section>
+
+    <aside class="panel result-panel">
+      <div class="status-card" id="statusCard">
+        <div class="traffic-light" id="trafficLight">
+          <span class="lamp red" id="lampRed"></span>
+          <span class="lamp yellow" id="lampYellow"></span>
+          <span class="lamp green" id="lampGreen"></span>
+        </div>
+        <div class="status-body">
+          <div class="status-kicker">当前信号</div>
+          <div class="status-title" id="statusText">模型加载中</div>
+          <div class="status-hint" id="statusHint">首次打开需下载约 12MB 模型</div>
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta"><span>推理用时</span><b id="latency">--</b></div>
+        <div class="meta"><span>检测目标</span><b id="count">0</b></div>
+      </div>
+
+      <div class="section-head">
+        <h2>检测结果</h2>
+        <span id="summaryCounts"></span>
+      </div>
+      <div class="det-list" id="detList">
+        <div class="empty">暂无结果</div>
+      </div>
+
+      <div class="legend">
+        <span><i style="background:#ff3b30"></i>红灯</span>
+        <span><i style="background:#ffcc00"></i>黄灯</span>
+        <span><i style="background:#34c759"></i>绿灯</span>
+        <span><i style="background:#8e8e93"></i>熄灭</span>
+      </div>
+    </aside>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="vendor/ort/ort.wasm.min.js"></script>
+  <script src="postprocess.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

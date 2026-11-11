@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='7' y='2' width='10' height='20' rx='4' fill='%23131a22'/%3E%3Ccircle cx='12' cy='7' r='2' fill='%23ff3b30'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%23ffcc00'/%3E%3Ccircle cx='12' cy='17' r='2' fill='%2334c759'/%3E%3C/svg%3E" />
+  <title>LOADING</title>
+</head>
+<body>
+<pre id="out">loading…</pre>
+<script src="vendor/ort/ort.wasm.min.js"></script>
+<script src="postprocess.js"></script>
+<script>
+(async () => {
+  const out = document.getElementById("out");
+  try {
+    ort.env.wasm.wasmPaths = new URL("vendor/ort/", document.baseURI).href;
+    ort.env.wasm.numThreads = self.crossOriginIsolated
+      ? Math.min(4, navigator.hardwareConcurrency || 1)
+      : 1;
+    ort.env.logLevel = "error";
+    const session = await ort.InferenceSession.create("models/traffic_light.onnx", {
+      executionProviders: ["wasm"],
+    });
+
+    const img = new Image();
+    img.src = "test/sample.jpg";
+    await img.decode();
+
+    const size = 640;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const c = canvas.getContext("2d", { willReadFrequently: true });
+    const scale = Math.min(size / img.naturalWidth, size / img.naturalHeight);
+    const w = Math.round(img.naturalWidth * scale);
+    const h = Math.round(img.naturalHeight * scale);
+    const padX = Math.floor((size - w) / 2);
+    const padY = Math.floor((size - h) / 2);
+    c.fillStyle = "#727272";
+    c.fillRect(0, 0, size, size);
+    c.drawImage(img, padX, padY, w, h);
+
+    const rgba = c.getImageData(0, 0, size, size).data;
+    const plane = size * size;
+    const f = new Float32Array(3 * plane);
+    for (let i = 0, p = 0; i < rgba.length; i += 4, p++) {
+      f[p] = rgba[i] / 255;
+      f[p + plane] = rgba[i + 1] / 255;
+      f[p + 2 * plane] = rgba[i + 2] / 255;
+    }
+
+    const t0 = performance.now();
+    const feeds = {};
+    feeds[session.inputNames[0]] = new ort.Tensor("float32", f, [1, 3, size, size]);
+    const result = await session.run(feeds);
+    const output = result[session.outputNames[0]];
+    const dets = TLPost.decode(output.data, output.dims, {
+      conf: 0.35,
+      iou: 0.45,
+      scale,
+      padX,
+      padY,
+      numClasses: 4,
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+    });
+    const ms = Math.round(performance.now() - t0);
+
+    out.textContent = JSON.stringify({ ms, threads: ort.env.wasm.numThreads, dets }, null, 1);
+    document.title =
+      "DONE " + JSON.stringify({ ms, dets: dets.map((d) => [d.label, d.confidence]) });
+  } catch (err) {
+    out.textContent = String((err && err.stack) || err);
+    document.title = "FAIL " + ((err && err.message) || err);
+  }
+})();
+</script>
+</body>
+</html>
