@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>红绿灯识别 · 浏览器端</title>
+  <title>交通信号灯检测 · YOLO26s</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='7' y='2' width='10' height='20' rx='4' fill='%23131a22'/%3E%3Ccircle cx='12' cy='7' r='2' fill='%23ff3b30'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%23ffcc00'/%3E%3Ccircle cx='12' cy='17' r='2' fill='%2334c759'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20261112" />
 </head>
 <body>
   <div class="aurora"></div>
@@ -17,7 +17,7 @@
       </div>
       <div>
         <h1>红绿灯识别</h1>
-        <p>YOLOv8 · ONNX Runtime Web · 浏览器本地推理</p>
+        <p>YOLO26s · 单类别 · ONNX Runtime Web · 浏览器本地推理</p>
       </div>
     </div>
     <div class="badge" id="modelBadge">模型加载中…</div>
@@ -55,8 +55,8 @@
       <div class="controls">
         <label class="slider">
           <span>置信度</span>
-          <input id="conf" type="range" min="0.15" max="0.9" step="0.05" value="0.35" />
-          <b id="confVal">0.35</b>
+          <input id="conf" type="range" min="0.15" max="0.9" step="0.05" value="0.25" />
+          <b id="confVal">0.25</b>
         </label>
         <div class="actions">
           <button class="btn ghost" id="pickBtn" disabled>选择图片</button>
@@ -65,6 +65,7 @@
         <input id="fileInput" type="file" accept="image/*" hidden />
       </div>
       <p class="privacy">图片只在本机浏览器处理，不会上传到服务器。</p>
+      <p class="privacy">模型：YOLO26s · 单类别 traffic_light · Open Images V7 微调（本机 CPU 10 epochs）；只判断是否存在信号灯，不区分红/黄/绿。</p>
     </section>
 
     <aside class="panel result-panel">
@@ -75,9 +76,9 @@
           <span class="lamp green" id="lampGreen"></span>
         </div>
         <div class="status-body">
-          <div class="status-kicker">当前信号</div>
+          <div class="status-kicker">检测结果</div>
           <div class="status-title" id="statusText">模型加载中</div>
-          <div class="status-hint" id="statusHint">首次打开需下载约 12MB 模型</div>
+          <div class="status-hint" id="statusHint">首次打开需下载约 40MB 模型</div>
         </div>
       </div>
 
@@ -95,10 +96,8 @@
       </div>
 
       <div class="legend">
-        <span><i style="background:#ff3b30"></i>红灯</span>
-        <span><i style="background:#ffcc00"></i>黄灯</span>
-        <span><i style="background:#34c759"></i>绿灯</span>
-        <span><i style="background:#8e8e93"></i>熄灭</span>
+        <span><i style="background:#34c759"></i>交通信号灯</span>
+        <span style="color:#8b97a8">单类别模型不区分红 / 黄 / 绿</span>
       </div>
     </aside>
   </main>
@@ -106,7 +105,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="vendor/ort/ort.wasm.min.js"></script>
-  <script src="postprocess.js"></script>
-  <script src="app.js"></script>
+  <script src="postprocess.js?v=20261112"></script>
+  <script src="app.js?v=20261112"></script>
 </body>
 </html>

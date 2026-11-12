@@ -27,16 +27,16 @@ const els = {
   tabs: Array.from(document.querySelectorAll(".tab")),
 };
 
-const COLORS = { red: "#ff3b30", yellow: "#ffcc00", green: "#34c759", off: "#8e8e93" };
-const NAMES = { red: "红灯", yellow: "黄灯", green: "绿灯", off: "熄灭" };
-const HINTS = { red: "禁止通行", yellow: "注意减速", green: "可以通行", off: "信号灯未点亮" };
-const INPUT_SIZE = 640;
+const COLORS = { traffic_light: "#34c759" };
+const NAMES = { traffic_light: "交通信号灯" };
+const HINTS = { traffic_light: "检测到交通信号灯" };
+const INPUT_SIZE = 512;
 
 const state = {
   session: null,
   ready: false,
   mode: "image",
-  conf: 0.35,
+  conf: 0.25,
   imageCanvas: null,
   stream: null,
   running: false,
@@ -118,7 +118,7 @@ async function initModel() {
   ort.env.wasm.numThreads = threads;
   ort.env.logLevel = "error";
 
-  const modelBytes = await fetchModel("models/traffic_light.onnx", (p) => {
+  const modelBytes = await fetchModel("models/traffic_light.onnx?v=20261112", (p) => {
     setBadge(`下载模型 ${Math.round(p * 100)}%`);
   });
 
@@ -136,7 +136,7 @@ async function initModel() {
   await infer(warm, INPUT_SIZE, INPUT_SIZE, 0.5);
 
   state.ready = true;
-  setBadge(`浏览器端 · WASM${threads > 1 ? " ×" + threads : ""}`);
+  setBadge(`YOLO26s · 单类别 · WASM${threads > 1 ? " ×" + threads : ""}`);
   els.pickBtn.disabled = false;
   els.camBtn.disabled = false;
   els.statusText.textContent = "等待检测";
@@ -180,7 +180,7 @@ async function infer(source, sw, sh, conf) {
     scale: meta.scale,
     padX: meta.padX,
     padY: meta.padY,
-    numClasses: 4,
+    numClasses: 1,
     width: sw,
     height: sh,
   });
@@ -268,23 +268,11 @@ function renderLoop() {
 /* ------------------------------ results ------------------------------- */
 
 function summarize(dets) {
-  const scores = {};
   const counts = {};
   dets.forEach((det) => {
     counts[det.label] = (counts[det.label] || 0) + 1;
-    const [x1, y1, x2, y2] = det.box;
-    const weight = det.confidence * Math.max(1, (x2 - x1) * (y2 - y1));
-    scores[det.label] = (scores[det.label] || 0) + weight;
   });
-  const active = Object.entries(scores).filter(([name]) => name !== "off");
-  let name = null;
-  if (active.length) {
-    active.sort((a, b) => b[1] - a[1]);
-    name = active[0][0];
-  } else if (Object.keys(scores).length) {
-    name = Object.keys(scores)[0];
-  }
-  return { name, counts };
+  return { name: dets.length ? "traffic_light" : null, counts };
 }
 
 function applyResult(dets, ms) {
@@ -294,11 +282,11 @@ function applyResult(dets, ms) {
   els.count.textContent = String(dets.length);
 
   if (summary.name) {
-    els.statusText.textContent = NAMES[summary.name] || summary.name;
-    els.statusText.style.color = COLORS[summary.name] || "#eef2f8";
-    els.statusHint.textContent = HINTS[summary.name] || "";
-    els.statusCard.style.borderColor = hexToRgba(COLORS[summary.name], 0.35);
-    els.statusCard.style.boxShadow = `0 0 34px ${hexToRgba(COLORS[summary.name], 0.12)}`;
+    els.statusText.textContent = `检测到 ${dets.length} 个信号灯`;
+    els.statusText.style.color = COLORS.traffic_light;
+    els.statusHint.textContent = "单类别模型仅判断是否存在交通信号灯，不区分红/黄/绿";
+    els.statusCard.style.borderColor = hexToRgba(COLORS.traffic_light, 0.35);
+    els.statusCard.style.boxShadow = `0 0 34px ${hexToRgba(COLORS.traffic_light, 0.12)}`;
   } else {
     els.statusText.textContent = "未检测到信号灯";
     els.statusText.style.color = "#eef2f8";
@@ -307,11 +295,9 @@ function applyResult(dets, ms) {
     els.statusCard.style.boxShadow = "";
   }
 
-  const on = { red: false, yellow: false, green: false };
-  if (summary.name && on[summary.name] !== undefined) on[summary.name] = true;
-  els.lampRed.classList.toggle("on", on.red);
-  els.lampYellow.classList.toggle("on", on.yellow);
-  els.lampGreen.classList.toggle("on", on.green);
+  [els.lampRed, els.lampYellow, els.lampGreen].forEach((lamp) =>
+    lamp.classList.remove("on")
+  );
 
   updateList(dets, summary);
   if (state.mode === "image") renderImage();

@@ -1,5 +1,5 @@
 (function (root) {
-  const CLASS_NAMES = ["red", "yellow", "green", "off"];
+  const CLASS_NAMES = ["traffic_light"];
 
   function iou(a, b) {
     const x1 = Math.max(a[0], b[0]);
@@ -30,7 +30,7 @@
   }
 
   function decode(data, dims, opts) {
-    const numClasses = opts.numClasses || 4;
+    const numClasses = opts.numClasses || 1;
     const channelsFirst = dims.length === 3 && dims[1] < dims[2];
     const C = channelsFirst ? dims[1] : dims[2];
     const N = channelsFirst ? dims[2] : dims[1];

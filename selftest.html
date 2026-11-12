@@ -18,7 +18,7 @@
       ? Math.min(4, navigator.hardwareConcurrency || 1)
       : 1;
     ort.env.logLevel = "error";
-    const session = await ort.InferenceSession.create("models/traffic_light.onnx", {
+    const session = await ort.InferenceSession.create("models/traffic_light.onnx?v=20261112", {
       executionProviders: ["wasm"],
     });
 
@@ -26,7 +26,7 @@
     img.src = "test/sample.jpg";
     await img.decode();
 
-    const size = 640;
+    const size = 512;
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = size;
     const c = canvas.getContext("2d", { willReadFrequently: true });
@@ -59,7 +59,7 @@
       scale,
       padX,
       padY,
-      numClasses: 4,
+      numClasses: 1,
       width: img.naturalWidth,
       height: img.naturalHeight,
     });
