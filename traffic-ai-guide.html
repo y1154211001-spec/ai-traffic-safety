@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="在 Windows 安裝 OpenCode，使用提示詞生成、測試與發布紅綠燈辨識網頁。">
+  <title>用 OpenCode 做出紅綠燈辨識網頁</title>
+  <style>
+    :root { color-scheme: light; --ink:#142d36; --muted:#45606a; --teal:#075b50; --paper:#f4f6f2; --line:#d9e2db; --gold:#f3be65; }
+    * { box-sizing:border-box; }
+    html { scroll-padding-top:1rem; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:1rem/1.75 "Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif; }
+    a { color:var(--teal); text-underline-offset:.2em; }
+    a:focus-visible, button:focus-visible { outline:3px solid #a45000; outline-offset:4px; }
+    .wrap { width:min(1120px, calc(100% - 2rem)); margin-inline:auto; }
+    header { background:#102f37; color:#fff; padding:clamp(2.4rem,7vw,5.5rem) 0 3rem; border-bottom:6px solid var(--gold); }
+    header p { max-width:46rem; color:#dbebe8; font-size:1.12rem; margin:.8rem 0 0; }
+    h1,h2 { line-height:1.25; }
+    h1 { font-size:clamp(2rem,5.4vw,4.25rem); letter-spacing:-.045em; margin:0; }
+    h2 { font-size:clamp(1.45rem,3vw,2.05rem); margin:0 0 1rem; }
+    p { margin:.55rem 0 1rem; }
+    ol,ul { padding-left:1.45rem; }
+    li + li { margin-top:.42rem; }
+    .layout { display:grid; grid-template-columns:14rem minmax(0,1fr); gap:1.5rem; align-items:start; padding-block:2rem; }
+    nav { position:sticky; top:1rem; padding:1rem; border:1px solid var(--line); border-radius:12px; background:#fff; }
+    nav strong { display:block; margin-bottom:.4rem; }
+    nav a { display:block; padding:.25rem 0; text-decoration:none; }
+    nav a:hover { text-decoration:underline; }
+    section { margin:0 0 1.2rem; padding:clamp(1rem,3vw,2rem); background:#fff; border:1px solid var(--line); border-radius:14px; }
+    .flow { display:flex; flex-wrap:wrap; list-style:none; padding:0; gap:.55rem; margin:1.25rem 0 0; }
+    .flow li { margin:0; border:1px solid #55767b; color:#fff; padding:.2rem .65rem; border-radius:6px; }
+    code { font-family:Consolas,"Courier New",monospace; font-size:.92em; overflow-wrap:anywhere; }
+    :not(pre)>code { background:#eaf1ed; padding:.08em .26em; border-radius:4px; }
+    pre { margin:.7rem 0 1rem; background:#142d36; color:#f1faf8; border-radius:9px; padding:1rem; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; }
+    button { font:inherit; font-weight:700; background:var(--teal); color:white; border:0; border-radius:7px; padding:.35rem .8rem; cursor:pointer; }
+    footer { color:var(--muted); padding:0 0 2rem; }
+    @media(max-width:760px) { .layout { grid-template-columns:1fr; gap:1rem; padding-top:1rem; } nav { position:static; } nav a { display:inline-block; margin-right:.75rem; } }
+    @media print { body,header,section,pre { background:white; color:#000; } header { padding:0; border:0; } header p,.flow li { color:#000; } .layout { display:block; padding-top:1rem; } nav,button { display:none; } section { padding:0; border:0; } h2 { break-after:avoid; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>用 OpenCode 做出紅綠燈辨識網頁</h1>
+      <p>這個課堂示範的網頁是我用 OpenCode 生成的。依照下面的步驟，在 Windows 裝好 OpenCode、貼上提示詞，就可以請它在你的專案資料夾建立自己的版本。</p>
+      <ol class="flow" aria-label="操作流程"><li>安裝 OpenCode</li><li>開啟專案</li><li>貼上提示詞</li><li>用瀏覽器驗收</li></ol>
+    </div>
+  </header>
+  <div class="wrap layout">
+    <nav aria-label="手冊目錄">
+      <strong>手冊目錄</strong>
+      <a href="#install">安裝 OpenCode</a>
+      <a href="#setup">開啟專案</a>
+      <a href="#prompt">生成網頁的提示詞</a>
+      <a href="#test">測試網頁</a>
+      <a href="#publish">發布網頁</a>
+    </nav>
+    <main>
+      <section id="install">
+        <h2>1. 安裝 OpenCode</h2>
+        <ol>
+          <li>在 Windows 安裝 Node.js 的 LTS 版，完成後重新開啟「命令提示字元」或 CMD。<a href="https://nodejs.org/en/download">Node.js 下載頁</a></li>
+          <li>在 CMD 逐行執行以下指令。看到 OpenCode 版本號就可以繼續。這份手冊以 OpenCode v1 的終端介面為例。</li>
+        </ol>
+        <pre><code>node --version
+npm --version
+npm install -g opencode-ai
+opencode --version</code></pre>
+        <p>如果 CMD 顯示找不到 <code>node</code>、<code>npm</code> 或 <code>opencode</code>，先關掉整個終端視窗再開一次，並查看上一條安裝指令是否成功。<a href="https://opencode.ai/v1/docs/">OpenCode v1 安裝文件</a></p>
+      </section>
+      <section id="setup">
+        <h2>2. 在專案資料夾啟動</h2>
+        <ol>
+          <li>在 Windows 檔案總管建立一個空資料夾，例如 <code>traffic-ai-web</code>，並打開它。在上方的地址列輸入 <code>cmd</code>，按 Enter。</li>
+          <li>在 CMD 輸入 <code>opencode</code>。開啟後，在 OpenCode 的輸入框輸入 <code>/connect</code>，依畫面連接課堂指定的模型服務商。若需要 API 金鑰，貼在連線設定的欄位。</li>
+          <li>輸入 <code>/models</code> 選擇可用模型，按 Tab 切到 <strong>Build</strong> 模式。看到輸入框旁顯示 Build，就可以貼下一節的提示詞。</li>
+        </ol>
+        <p><a href="https://opencode.ai/v1/docs/providers/">模型服務商設定</a> · <a href="https://opencode.ai/v1/docs/agents/">OpenCode 代理模式</a></p>
+      </section>
+      <section id="prompt">
+        <h2>3. 請 OpenCode 生成網頁</h2>
+        <p>把下方整段貼進 <strong>OpenCode 的輸入框</strong>，按 Enter 送出。它會依提示在目前的資料夾建立檔案。遇到終端權限提示，先看要執行的指令是否與這個專案有關。</p>
+        <button type="button" id="copy-prompt" hidden>複製提示詞</button>
+        <span id="copy-status" role="status"></span>
+        <pre id="agent-prompt"><code>請在目前的專案資料夾直接建立一個繁體中文的「路口紅綠燈辨識」網頁。請實際建立檔案並執行測試。
+
+1. 使用 HTML、CSS、JavaScript，以 index.html 為入口。畫面提供「選擇照片」「開始辨識」和結果預覽。保留原圖比例，並讓手機和電腦都能使用。
+2. 請自行處理辨識所需的模型與執行環境，不需我提供照片、資料集或模型。可使用能在瀏覽器執行、具備紅綠燈類別且允許公開部署的現成模型。辨識後在原照片上框出紅綠燈位置，標示信心分數。請實際跑模型，不使用預先畫好的框或模擬結果。
+3. 顯示「模型載入中」「辨識完成」「未偵測到紅綠燈」與清楚的錯誤訊息。所有網頁資源使用相對路徑，讓成品可以部署到 GitHub Pages 的專案子路徑。API 金鑰只留在本機的服務設定。
+4. 自己找可用於測試的照片，至少測一張有紅綠燈和一張沒有紅綠燈的照片。用本機 HTTP 服務開啟網頁，檢查模型能否載入、按鈕能否執行、框是否落在燈的位置。
+5. 完成後告訴我入口檔案、可直接開啟的本機測試網址，以及你實際驗證過哪些功能。如果卡住，請指出是模型載入、網頁執行，還是辨識結果出了問題。</code></pre>
+      </section>
+      <section id="test">
+        <h2>4. 在瀏覽器驗收</h2>
+        <ol>
+          <li>開啟 OpenCode 回傳的本機網址。選一張看得到號誌的路口照片，按「開始辨識」，等網頁顯示結果。</li>
+          <li>看辨識框是否落在燈頭上。換一張沒有紅綠燈的照片，檢查網頁能否完成辨識並顯示零個結果。</li>
+          <li>若網頁報錯，把畫面上的完整錯誤訊息貼回同一個 OpenCode 對話。修好後再用同一張照片驗證。</li>
+        </ol>
+        <pre><code>剛才測試出現以下錯誤。請在目前專案找出原因、修改程式，並用同一張照片重跑。請回報實際看到的結果與測試網址。
+
+錯誤訊息：（貼在這裡）</code></pre>
+      </section>
+      <section id="publish">
+        <h2>5. 讓同學用網址打開</h2>
+        <p>本機驗收後，再將成品放上 GitHub Pages。這一步需要 GitHub 帳號，以及對指定倉庫的發布權限。<a href="https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site">GitHub Pages 設定文件</a></p>
+        <pre><code>請把已通過本機測試的網頁發布到我指定的 GitHub Pages 倉庫：（貼上倉庫網址）。
+
+先確認 index.html 和必要的網頁資源位於實際發布目錄。若需要我登入或啟用 Pages，請告訴我在 GitHub 哪裡操作。發布後請用公開 HTTPS 網址確認網頁可以開啟，再跑一次照片辨識。最後把可以分享給同學的網址給我。</code></pre>
+        <p>拿到公開網址後，用無痕視窗開啟並選圖測一次。能看到網頁並完成辨識，就可以分享給同學。</p>
+      </section>
+    </main>
+  </div>
+  <footer class="wrap">OpenCode 網頁實作 · 課堂操作手冊</footer>
+
+
+  <script>
+    const copyButton = document.querySelector('#copy-prompt');
+    const copyStatus = document.querySelector('#copy-status');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      copyButton.hidden = false;
+      copyButton.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(document.querySelector('#agent-prompt').textContent);
+          copyStatus.textContent = ' 已複製。';
+        } catch {
+          copyStatus.textContent = ' 請選取下方文字並複製。';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
